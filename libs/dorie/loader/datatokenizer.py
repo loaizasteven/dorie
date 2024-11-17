@@ -18,6 +18,11 @@ class MyDataset(BaseModel):
     labelmap: Optional[dict] = None
     split: float = 0.8
     pretrained_model_name: str = 'roberta-base'
+    num_labels: Optional[int] = None
+
+    def _setnumlabels(self, dataset: Dataset):
+        """Set the number of labels in the dataset"""
+        self.num_labels = len(dataset['label'].unique())
 
     def _fileformat(self):
         """Return the file format of the dataset"""
@@ -26,6 +31,7 @@ class MyDataset(BaseModel):
     def _csvconverter(self, path: str):
         """Convert CSV dataset to DatasetDict"""
         dataset = pd.read_csv(path)
+        self._setnumlabels(dataset)
         label_map = self.labelmap or {label: i for i, label in enumerate(dataset['label'].unique())}
         dataset['label'] = dataset['label'].map(label_map)
 
