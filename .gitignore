@@ -1,0 +1,6 @@
+# env
+**/*env*
+
+# Logs and Cache files
+**/mlruns
+**/__pycache__
