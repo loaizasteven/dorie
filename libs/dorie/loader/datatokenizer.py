@@ -9,7 +9,7 @@ import pandas as pd
 
 import os
 import sys
-from typing import Optional, Union
+from typing import Optional
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))  
 
@@ -79,3 +79,6 @@ class MyDataset(BaseModel):
     def invoke(self, *args, **kwds):
         return self.__call__(*args, **kwds)
     
+
+class Dummy(BaseModel):
+    pass    
