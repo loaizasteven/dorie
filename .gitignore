@@ -1,0 +1,7 @@
+# env
+**/*env*
+
+# Logs and Cache files
+**/mlruns
+**/__pycache__
+**.pytest_cache
