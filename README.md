@@ -19,4 +19,4 @@ poetry init # Existing Project
 
 To use the env use `poetry run python <>.py` or activate the shell `poetry shell`, the latter will activate the virtual enviornment from cache dir.
 
-Note: Current issue with installing `torch` using poetry, use [venv shell script](./libs/dorie/virtualenv.sh) and requirements [file](./requirements.txt).
+**Note**: Current issue with installing `torch` using poetry, use [venv shell script](./libs/dorie/virtualenv.sh) and requirements [file](./requirements.txt).
