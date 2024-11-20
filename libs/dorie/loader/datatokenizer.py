@@ -9,12 +9,12 @@ import pandas as pd
 
 import os
 import sys
-from typing import Optional
-
+from typing import Optional, Union
+from pathlib import Path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))  
 
 class MyDataset(BaseModel):
-    path: str
+    path: Union[str, Path]
     labelmap: Optional[dict] = None
     split: float = 0.8
     pretrained_model_name: str = 'roberta-base'
@@ -26,7 +26,7 @@ class MyDataset(BaseModel):
 
     def _fileformat(self):
         """Return the file format of the dataset"""
-        return self.path.split('.')[-1]
+        return self.path.split('.')[-1] if isinstance(self.path, str) else self.path.suffix[1:]
     
     def _csvconverter(self, path: str):
         """Convert CSV dataset to DatasetDict"""
