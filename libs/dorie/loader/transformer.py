@@ -1,10 +1,10 @@
 # Loader of hugging face transformer from /config.json
-from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trainer, TrainingArguments, AutoConfig
-import json
+from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trainer, TrainingArguments
 
 import sys
 import os
 
+from typing import Any, Optional
 from pydantic import BaseModel
 from .datatokenizer import MyDataset
 
@@ -19,10 +19,19 @@ class ModelTrainer(BaseModel):
     modelArgs: dict
     device: str
     data: MyDataset
+    model: Optional[AutoModelForSequenceClassification] = None
+    tokenizer: Optional[AutoTokenizer] = None
 
-    def __init__(self, **data):
-        super().__init__(**data)
-        self.model = AutoModelForSequenceClassification.from_pretrained(self.baseModel, num_labels=data.numLabels)
+    class Config:
+        arbitrary_types_allowed = True
+
+    def __init__(self, baseModel: str, modelArgs: dict, device: str, data: MyDataset):
+        super().__init__(baseModel=baseModel, modelArgs=modelArgs, device=device, data=data)
+        self.baseModel = baseModel
+        self.modelArgs = modelArgs
+        self.device = device
+        self.data = data
+        self.model = AutoModelForSequenceClassification.from_pretrained(self.baseModel, num_labels=self.data.numLabels)
         self.tokenizer = AutoTokenizer.from_pretrained(self.baseModel)
 
     def train(self, data):
@@ -60,10 +69,3 @@ class ModelTrainer(BaseModel):
         )
 
         return trainer.evaluate()
-
-
-if __name__ == '__main__':
-    config = json.load(open(f'{filedir}/config.json'))
-    trainer = ModelTrainer(**config)
-    model = trainer.model()
-    print('Model loaded successfully')
