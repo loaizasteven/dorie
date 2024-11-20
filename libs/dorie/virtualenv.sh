@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-REPO="dorie"
+REPO="venv"
+REPONAME="dorie"
 DIRECTORY="dorie_env"
 
 function activate () {
@@ -11,7 +12,7 @@ function activate () {
   # pip installation
   pip install --upgrade pip
   echo "pip installation in quiet mode..."
-  pip install -q -r $HOME/git/$REPO/libs/$REPO/requirements.txt --upgrade-strategy only-if-needed
+  pip install -q -r $HOME/git/$REPONAME/requirements.txt --upgrade-strategy only-if-needed
 }
 
 if [ -d "$HOME/git/$REPO/$DIRECTORY" ]; then
