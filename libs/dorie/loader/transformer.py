@@ -21,9 +21,7 @@ class ModelTrainer(BaseModel):
     data: MyDataset
     model: Optional[AutoModelForSequenceClassification] = None
     tokenizer: Optional[AutoTokenizer] = None
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config: Optional[dict] = {'arbitrary_types_allowed': 'true'}
 
     def __init__(self, baseModel: str, modelArgs: dict, device: str, data: MyDataset):
         super().__init__(baseModel=baseModel, modelArgs=modelArgs, device=device, data=data)
