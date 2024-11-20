@@ -22,7 +22,7 @@ def test_transformer():
                 'per_device_train_batch_size': 2, 
                 'num_train_epochs': 1
                 }, 
-                device='cuda', 
+                device='cpu', 
                 data=dataClass
             )
     model = trainer.model

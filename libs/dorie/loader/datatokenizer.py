@@ -56,7 +56,11 @@ class MyDataset(BaseModel):
         dataset = converter(self.path)
 
         dataset = dataset.map(self.preprocess, batched=True)
-        dataset.set_format(format)
+        try:
+            dataset.set_format(format)
+        except:
+            import warnings
+            warnings.warn(f"Format {format} not supported. Using default format")
 
         return dataset
     
