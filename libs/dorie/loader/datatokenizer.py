@@ -78,7 +78,3 @@ class MyDataset(BaseModel):
     
     def invoke(self, *args, **kwds):
         return self.__call__(*args, **kwds)
-    
-
-class Dummy(BaseModel):
-    pass    
