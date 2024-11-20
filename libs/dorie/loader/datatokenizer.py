@@ -18,11 +18,11 @@ class MyDataset(BaseModel):
     labelmap: Optional[dict] = None
     split: float = 0.8
     pretrained_model_name: str = 'roberta-base'
-    num_labels: Optional[int] = None
+    numLabels: Optional[int] = None
 
     def _setnumlabels(self, dataset: Dataset):
         """Set the number of labels in the dataset"""
-        self.num_labels = len(dataset['label'].unique())
+        self.numLabels = len(dataset['label'].unique())
 
     def _fileformat(self):
         """Return the file format of the dataset"""
