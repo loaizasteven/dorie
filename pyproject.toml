@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "dorie"
+version = "0.1.0"
+description = ""
+authors = ["Steven Loaiza"]
+license = "Apache License 2.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pydantic = "^2.9.2"
+datasets = "^3.1.0"
+transformers = "^4.46.3"
+huggingface-hub = "^0.26.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

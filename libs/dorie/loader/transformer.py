@@ -8,8 +8,15 @@ from typing import Any, Optional
 from pydantic import BaseModel
 from .datatokenizer import MyDataset
 
-import torch
+import numpy as np
 
+try:
+    import torch
+    TORCH_AVAILABLE = True
+except ImportError:
+    import warnings
+    warnings.warn("torch not found, please install torch to use this module")
+    TORCH_AVAILABLE = False
 filedir = os.path.dirname(__file__)
 sys.path.append(filedir)
 
@@ -51,9 +58,14 @@ class ModelTrainer(BaseModel):
 
     def predict(self, text):
         inputs = self.tokenizer(text, return_tensors='pt')
-        with torch.no_grad():
+        if TORCH_AVAILABLE:
+            with torch.no_grad():
+                logits = self.model(**inputs).logits
+
+            predicted_class = torch.argmax(logits)
+        else:
             logits = self.model(**inputs).logits
-        predicted_class = torch.argmax(logits)
+            predicted_class = np.argmax(logits)
         return predicted_class
 
     def evaluate(self, data):
