@@ -55,9 +55,9 @@ class ModelTrainer(BaseModel):
 
         trainer.train()
 
-    def save(self):
-        self.model.save_pretrained(self.outputDir)
-        self.tokenizer.save_pretrained(self.outputDir)
+    def save(self, output_dir):
+        self.model.save_pretrained(output_dir)
+        self.tokenizer.save_pretrained(output_dir)
 
     def predict(self, text):
         inputs = self.tokenizer(text, return_tensors='pt')
