@@ -33,6 +33,7 @@ class MyDataset(BaseModel):
         dataset = pd.read_csv(path)
         self._setnumlabels(dataset)
         label_map = self.labelmap or {label: i for i, label in enumerate(dataset['label'].unique())}
+        # TODO: Add support for dumping label map to a file/instance
         dataset['label'] = dataset['label'].map(label_map)
 
         data_dict = {'text': dataset['text'].tolist(), 'label': dataset['label'].tolist()}
