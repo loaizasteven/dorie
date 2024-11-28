@@ -33,7 +33,6 @@ class Config(BaseModel):
 
         if config_file:
             with open(config_file, 'r') as f:
-                print('her')
                 return json.load(f)
         else:
             raise FileNotFoundError("No config.json file found in the directory.")
