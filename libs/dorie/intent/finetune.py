@@ -35,7 +35,6 @@ class Intent(BaseModel):
 
     def load_data(self):
         self.dataclass = MyDataset(path=self.datapath)
-        print('hihi', type(self.dataclass))
         return self.dataclass.loader()
 
     def train(self):
