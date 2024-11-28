@@ -42,6 +42,8 @@ class ModelTrainer(BaseModel):
         self.model = AutoModelForSequenceClassification.from_pretrained(self.baseModel, num_labels=self.dataClass.numLabels)
         self.tokenizer = AutoTokenizer.from_pretrained(self.baseModel)
 
+        self._setdevice()
+
     def train(self):
         training_args = TrainingArguments(**self.modelArgs)
 
@@ -54,6 +56,16 @@ class ModelTrainer(BaseModel):
         )
 
         trainer.train()
+
+    def _setdevice(self):
+        if hasattr(torch, self.device):
+            device = getattr(torch, self.device)
+            set_device = self.device if device.is_available() else 'cpu'
+        else:
+            warnings.warn(f"Device {self.device} not found. Using default device")
+            set_device = 'cpu'
+
+        self.model.to(set_device)
 
     def save(self, output_dir):
         self.model.save_pretrained(output_dir)
