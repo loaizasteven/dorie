@@ -15,10 +15,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 class MyDataset(BaseModel):
     path: Union[str, Path]
-    labelmap: Optional[dict] = None
     split: float = 0.8
     pretrained_model_name: str = 'roberta-base'
     numLabels: Optional[int] = None
+    labelMap: Optional[dict] = None
 
     def _setnumlabels(self, dataset: Dataset):
         """Set the number of labels in the dataset"""
@@ -28,13 +28,18 @@ class MyDataset(BaseModel):
         """Return the file format of the dataset"""
         return self.path.split('.')[-1] if isinstance(self.path, str) else self.path.suffix[1:]
     
+    def _setlabelmap(self, dataset: Dataset) -> None:
+        """Set the label map"""
+        self.labelMap = self.labelMap or {label: i for i, label in enumerate(dataset['label'].unique())} 
+
     def _csvconverter(self, path: str):
         """Convert CSV dataset to DatasetDict"""
         dataset = pd.read_csv(path)
         self._setnumlabels(dataset)
-        label_map = self.labelmap or {label: i for i, label in enumerate(dataset['label'].unique())}
+        
         # TODO: Add support for dumping label map to a file/instance
-        dataset['label'] = dataset['label'].map(label_map)
+        self._setlabelmap(dataset=dataset)
+        dataset['label'] = dataset['label'].map(self.labelMap)
 
         data_dict = {'text': dataset['text'].tolist(), 'label': dataset['label'].tolist()}
         split_idx = int(self.split * len(data_dict['text']))
