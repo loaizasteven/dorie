@@ -42,7 +42,9 @@ class ModelTrainer(BaseModel):
         self.model = AutoModelForSequenceClassification.from_pretrained(self.baseModel, num_labels=self.dataClass.numLabels)
         self.tokenizer = AutoTokenizer.from_pretrained(self.baseModel)
 
+        # Model configuration
         self._setdevice()
+        self._setlabelmap()
 
     def train(self):
         training_args = TrainingArguments(**self.modelArgs)
@@ -56,6 +58,11 @@ class ModelTrainer(BaseModel):
         )
 
         trainer.train()
+    
+    def _setlabelmap(self):
+        if hasattr(self.dataClass, 'labelMap'):
+            self.model.config.label2id = self.dataClass.labelMap
+            self.model.config.id2label = {v: k for k, v in self.model.config.label2id.items()}
 
     def _setdevice(self):
         if hasattr(torch, self.device):
