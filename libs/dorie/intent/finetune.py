@@ -11,7 +11,7 @@ import os.path as osp
 
 
 class Intent(BaseModel):
-    datapath: str = osp.join(Commons().fileDir, 'samples/personal-auto-insurance-intents.csv')
+    datapath: str 
     config: dict = config()
     dataclass: Optional[MyDataset] = None
     trainer: Optional[ModelTrainer] = None
@@ -28,6 +28,8 @@ class Intent(BaseModel):
     def save(self, output_dir):
         self.trainer.save(output_dir)
 
-intent_classifier = Intent()
-intent_classifier.train()
-intent_classifier.save('./results')
+
+if __name__ == '__main__':
+    intent_classifier = Intent(datapath= osp.join(Commons().fileDir, 'samples/personal-auto-insurance-intents.csv'))
+    intent_classifier.train()
+    intent_classifier.save('./results')
