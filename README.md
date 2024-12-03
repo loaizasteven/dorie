@@ -1,6 +1,11 @@
 # <img src="./docs/static/img/Image.jpeg" alt="drawing" width="30"/> DORIE
 > Dynamic Omnichannel RoBERTa Intent Engine
 
+## Huggingface Hub
+Set up token from huggingface.co and run the following on the terminal `huggingface login` to set your credentials in a cache (e.g. `/Users/<USERNAME>/.cache/huggingface/stored_tokens`)
+
+### Cache Managment
+See shell script [hf_management.sh](./libs/dorie/hf_management.sh).
 ## Python Dependency Management
 This project uses [python-poetry](https://python-poetry.org) for python packages and dependencies. 
 
@@ -19,4 +24,4 @@ poetry init # Existing Project
 
 To use the env use `poetry run python <>.py` or activate the shell `poetry shell`, the latter will activate the virtual enviornment from cache dir.
 
-Note: Current issue with installing `torch` using poetry, use [venv shell script](./libs/dorie/virtualenv.sh) and requirements [file](./requirements.txt).
+**Note**: Current issue with installing `torch` using poetry, use [venv shell script](./libs/dorie/virtualenv.sh) and requirements [file](./requirements.txt).

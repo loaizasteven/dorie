@@ -4,9 +4,10 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trai
 import sys
 import os
 
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from pydantic import BaseModel
 from .datatokenizer import MyDataset
+from datasets import DatasetDict
 
 import numpy as np
 
@@ -25,36 +26,57 @@ class ModelTrainer(BaseModel):
     baseModel: str
     modelArgs: dict
     device: str
-    data: MyDataset
+    dataClass: MyDataset
+    data: Optional[DatasetDict] = None
     model: Optional[AutoModelForSequenceClassification] = None
     tokenizer: Optional[AutoTokenizer] = None
     model_config: Optional[dict] = {'arbitrary_types_allowed': 'true'}
 
-    def __init__(self, baseModel: str, modelArgs: dict, device: str, data: MyDataset):
-        super().__init__(baseModel=baseModel, modelArgs=modelArgs, device=device, data=data)
+    def __init__(self, baseModel: str, modelArgs: dict, device: str, dataClass: MyDataset, data: DatasetDict = None):
+        super().__init__(baseModel=baseModel, modelArgs=modelArgs, device=device, dataClass=dataClass, data=data)
         self.baseModel = baseModel
         self.modelArgs = modelArgs
         self.device = device
-        self.data = data
-        self.model = AutoModelForSequenceClassification.from_pretrained(self.baseModel, num_labels=self.data.numLabels)
-        self.tokenizer = AutoTokenizer.from_pretrained(self.baseModel)
+        self.dataClass = dataClass
+        self.data = data if data else self.dataClass.loader()
+        self.model = self.model or AutoModelForSequenceClassification.from_pretrained(self.baseModel, num_labels=self.dataClass.numLabels)
+        self.tokenizer = self.tokenizer or AutoTokenizer.from_pretrained(self.baseModel)
 
-    def train(self, data):
+        # Model configuration
+        self._setdevice()
+        self._setlabelmap()
+
+    def train(self):
         training_args = TrainingArguments(**self.modelArgs)
 
         trainer = Trainer(
             model=self.model,
             args=training_args,
-            train_dataset=data['train'],
-            eval_dataset=data['test'],
+            train_dataset=self.data['train'],
+            eval_dataset=self.data['test'],
             compute_metrics=lambda pred: {'accuracy': (pred.predictions.argmax(-1) == pred.label_ids).mean()}
         )
 
         trainer.train()
+    
+    def _setlabelmap(self):
+        if hasattr(self.dataClass, 'labelMap'):
+            self.model.config.label2id = self.dataClass.labelMap
+            self.model.config.id2label = {v: k for k, v in self.model.config.label2id.items()}
 
-    def save(self):
-        self.model.save_pretrained(self.outputDir)
-        self.tokenizer.save_pretrained(self.outputDir)
+    def _setdevice(self):
+        if hasattr(torch, self.device):
+            device = getattr(torch, self.device)
+            set_device = self.device if device.is_available() else 'cpu'
+        else:
+            warnings.warn(f"Device {self.device} not found. Using default device")
+            set_device = 'cpu'
+
+        self.model.to(set_device)
+
+    def save(self, output_dir):
+        self.model.save_pretrained(output_dir)
+        self.tokenizer.save_pretrained(output_dir)
 
     def predict(self, text):
         inputs = self.tokenizer(text, return_tensors='pt')
@@ -68,7 +90,7 @@ class ModelTrainer(BaseModel):
             predicted_class = np.argmax(logits)
         return predicted_class
 
-    def evaluate(self, data):
+    def evaluate(self, data: DatasetDict):
         trainer = Trainer(
             model=self.model,
             args=TrainingArguments(
