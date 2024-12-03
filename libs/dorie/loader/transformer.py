@@ -39,8 +39,8 @@ class ModelTrainer(BaseModel):
         self.device = device
         self.dataClass = dataClass
         self.data = data if data else self.dataClass.loader()
-        self.model = AutoModelForSequenceClassification.from_pretrained(self.baseModel, num_labels=self.dataClass.numLabels)
-        self.tokenizer = AutoTokenizer.from_pretrained(self.baseModel)
+        self.model = self.model or AutoModelForSequenceClassification.from_pretrained(self.baseModel, num_labels=self.dataClass.numLabels)
+        self.tokenizer = self.tokenizer or AutoTokenizer.from_pretrained(self.baseModel)
 
         # Model configuration
         self._setdevice()
