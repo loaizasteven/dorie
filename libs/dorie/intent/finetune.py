@@ -1,23 +1,6 @@
 from intent import Commons, config
 """
 This module provides functionality for fine-tuning an intent classification model using a custom dataset and configuration.
-
-Classes:
-    Intent(BaseModel): A class for managing the dataset, model training, and saving the trained model.
-
-Functions:
-    load_data(self): Loads the dataset using the specified datapath and initializes the dataclass attribute.
-    train(self): Trains the model using the loaded dataset and configuration.
-    save(self, output_dir): Saves the trained model to the specified output directory.
-
-Usage:
-
-    # Load RoBERTa-base model for sequence classification
-
-    sample_text = 'I want to pay my premium in full'
-
-Notes:
-    - `return_tensors="pt"` in the tokenizer function indicates that the tokenized inputs should be returned as PyTorch tensors.
 """
 from loader import MyDataset, ModelTrainer
 
