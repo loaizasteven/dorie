@@ -3,6 +3,12 @@ from openai.types.chat.chat_completion import ChatCompletion, ChatCompletionMess
 
 from pydantic import BaseModel
 from typing import Dict, Any, Union
+
+from pathlib import Path
+import sys
+current_dir = Path(__file__).resolve()
+sys.path.insert(0, str(current_dir.parent))
+
 from prompts import SYNTHETIC_FEW_SHOT_PREFIX, USER_PROMPT, RESPONSE_FORMAT
 
 import json 
