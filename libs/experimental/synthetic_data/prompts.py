@@ -8,10 +8,12 @@ SYNTHETIC_FEW_SHOT_PREFIX = '''
     'label': ['claimStart', 'addDriver']
     'text': ['I was in a car accident and someone ran into my car but I don't know how to start the process.', 'My spouse just got their license and I want to ensure they're added to my policy.']
     }
+
+    Additionally, include some examples that are not related to the labels provided but still potential insurance related utterances, these examples should be classified as 'noIntent'.
     '''
 
 USER_PROMPT = '''
-    Provide 20 examples for each label, randomize the order of the examples.
+    Provide 20 examples for each label, apply random shuffle.
     '''
 
 RESPONSE_FORMAT = {
