@@ -6,6 +6,9 @@ from typing import Dict, Any, Union
 from prompts import SYNTHETIC_FEW_SHOT_PREFIX, USER_PROMPT, RESPONSE_FORMAT
 
 import json 
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class SyntheticDataGenerator(BaseModel):
@@ -21,13 +24,13 @@ class SyntheticDataGenerator(BaseModel):
     ...     messages: List[Message]
     >>> class TrainingClass(BaseModel):
     ...     data: List[OpenAIResponse]
-    >>> synthdata = CreateData(
+    >>> synthdata = SyntheticDataGenerator(
     ...         systemprompt = "provide a small finetuning training example",
     ...         userinput = "Provide 1 trianing examples",
     ...         modelname = "gpt-4o-2024-08-06",
     ...         response_format = TrainingClass
     ...     )
-    >>> response = synthdata()
+    >>> response = synthdata.invoke()
     >>> isinstance(response.parsed, TrainingClass)
     True
 
@@ -53,7 +56,7 @@ class SyntheticDataGenerator(BaseModel):
         This is useful if you want to do some validation that requires the entire model to be initialized.
         """
         if not self.client:
-            print('Message: initializing client connection')
+            logging.debug('Message: initializing client connection')
             self.client = OpenAI()
     
     def invoke(self) -> ChatCompletionMessage:
@@ -87,8 +90,7 @@ class SyntheticDataGenerator(BaseModel):
 
     def close(self):
         self.__del__()
-
-        print('Message: closing client connection \n')
+        logging.debug('Message: closing client connection \n')
 
 
 if __name__ == "__main__":
