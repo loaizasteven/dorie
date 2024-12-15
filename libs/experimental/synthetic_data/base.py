@@ -63,12 +63,15 @@ class CreateData(BaseModel):
             }
         }
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def model_post_init(self, __context: Any) -> None:
+        """Override this method to perform additional initialization after `__init__` and `model_construct`.
+        This is useful if you want to do some validation that requires the entire model to be initialized.
+        """
         # Client
+        print('Message: initializing client connection')
         self.client = OpenAI()
     
-    def __call__(self) -> ChatCompletionMessage:
+    def invoke(self) -> ChatCompletionMessage:
         self.completion = self.client.beta.chat.completions.parse(
             model = self.modelname,
             max_tokens= self.maxtokens,
@@ -106,7 +109,7 @@ class CreateData(BaseModel):
 if __name__ == "__main__":
     # Generate Call
     synthdata = CreateData()
-    synthdata()
+    synthdata.invoke()
 
     # Dump Content
     status = synthdata.jsondump(outputfile = './syntheticinsurancedata.json')
