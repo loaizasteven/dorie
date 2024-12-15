@@ -13,7 +13,7 @@ SYNTHETIC_FEW_SHOT_PREFIX = '''
     '''
 
 USER_PROMPT = '''
-    Provide 20 examples for each label, apply random shuffle.
+    Provide 20 examples for each label, randomize the order of the examples.
     '''
 
 RESPONSE_FORMAT = {
