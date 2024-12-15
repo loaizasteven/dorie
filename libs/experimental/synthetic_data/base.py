@@ -52,9 +52,9 @@ class SyntheticDataGenerator(BaseModel):
         """Override this method to perform additional initialization after `__init__` and `model_construct`.
         This is useful if you want to do some validation that requires the entire model to be initialized.
         """
-        # Client
-        print('Message: initializing client connection')
-        self.client = OpenAI()
+        if not self.client:
+            print('Message: initializing client connection')
+            self.client = OpenAI()
     
     def invoke(self) -> ChatCompletionMessage:
         self.completion = self.client.beta.chat.completions.parse(
