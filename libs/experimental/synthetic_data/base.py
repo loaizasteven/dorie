@@ -3,7 +3,7 @@ from openai.types.chat.chat_completion import ChatCompletion, ChatCompletionMess
 
 from pydantic import BaseModel
 from typing import Dict, Any, Union
-from prompts import SYNTHETIC_FEW_SHOT_PREFIX, USER_PROMPT
+from prompts import SYNTHETIC_FEW_SHOT_PREFIX, USER_PROMPT, RESPONSE_FORMAT
 
 import json 
 
@@ -46,22 +46,7 @@ class SyntheticDataGenerator(BaseModel):
     client: Any | None = None
     maxtokens: int = 16000
     completion: ChatCompletion | None = None
-    response_format: Dict | Any = {
-        "type": "json_schema", 
-        "json_schema":{
-            "name": "syntheticdata", 
-            "strict": True, 
-            "schema": {
-                "type": "object", 
-                "properties": {
-                    "label": {"type": "array", "items": {"type": "string"}}, 
-                    "text": {"type": "array", "items": {"type": "string"}}
-                },
-                "additionalProperties": False,
-                "required": ["label", "text"]
-                }
-            }
-        }
+    response_format: Dict | Any = RESPONSE_FORMAT
 
     def model_post_init(self, __context: Any) -> None:
         """Override this method to perform additional initialization after `__init__` and `model_construct`.
