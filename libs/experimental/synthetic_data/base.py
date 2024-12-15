@@ -8,7 +8,7 @@ from prompts import SYNTHETIC_FEW_SHOT_PREFIX, USER_PROMPT
 import json 
 
 
-class CreateData(BaseModel):
+class SyntheticDataGenerator(BaseModel):
     """ Class to generate sample finetuning data from LLM to be used for task specific SLM
 
     Docstring Test
@@ -108,7 +108,7 @@ class CreateData(BaseModel):
 
 if __name__ == "__main__":
     # Generate Call
-    synthdata = CreateData()
+    synthdata = SyntheticDataGenerator()
     synthdata.invoke()
 
     # Dump Content
