@@ -1,27 +1,47 @@
 # <img src="./docs/static/img/Image.jpeg" alt="drawing" width="30"/> DORIE
 > Dynamic Omnichannel RoBERTa Intent Engine
 
-## Huggingface Hub
-Set up token from huggingface.co and run the following on the terminal `huggingface login` to set your credentials in a cache (e.g. `/Users/<USERNAME>/.cache/huggingface/stored_tokens`)
+## Overview
+DORIE (Dynamic Omnichannel RoBERTa Intent Engine) is an advanced natural language processing system designed for multi-channel intent classification. Built on RoBERTa architecture, it provides enterprise-grade NLP capabilities for automated response handling.
 
-### Cache Managment
-See shell script [hf_management.sh](./libs/dorie/hf_management.sh).
-## Python Dependency Management
-This project uses [python-poetry](https://python-poetry.org) for python packages and dependencies. 
 
-Initial Installation and project set up
+## Getting Started
+
+### Prerequisites
+- Python 3.8+
+- Huggingface account
+- Poetry or virtualenv
+
+### Huggingface Setup
+1. Create an account at huggingface.co
+2. Set up authentication:
 ```bash
+huggingface-cli login
+```
+Credentials will be stored in `/Users/<USERNAME>/.cache/huggingface/stored_tokens`
+
+### Installation Options
+
+#### Using Poetry (Recommended)
+```bash
+# Install Poetry
 brew install pipx
-pipx  install poetry
-pipx ensurepath 
+pipx install poetry
+pipx ensurepath
 pipx upgrade poetry
+
+# Initialize project
+poetry install
 ```
 
-Requires a new terminal to reflect changes
-```bash
-poetry init # Existing Project
-```
+Use the environment:
+- Run scripts: `poetry run python script.py`
+- Activate shell: `poetry shell`
 
-To use the env use `poetry run python <>.py` or activate the shell `poetry shell`, the latter will activate the virtual enviornment from cache dir.
+#### Using Virtualenv
+Due to torch compatibility issues with Poetry, you can alternatively:
+1. Use the [virtualenv script](./libs/dorie/virtualenv.sh)
+2. Install dependencies from [requirements.txt](./requirements.txt)
 
-**Note**: Current issue with installing `torch` using poetry, use [venv shell script](./libs/dorie/virtualenv.sh) and requirements [file](./requirements.txt).
+### Cache Management
+For Huggingface cache management, refer to [hf_management.sh](./libs/dorie/hf_management.sh).
