@@ -81,7 +81,7 @@ class SyntheticDataGenerator(BaseModel):
             trainingdata = self.parseobj()
             json.dump(trainingdata, open(outputfile, 'w'), indent=4)
 
-            return f"Synthetic data completed and dumped to -> {outputfile}"
+            return f"Success: Synthetic data completed and dumped to -> {outputfile}"
         except (AttributeError, BaseException) as e:
             return f"Error: Unable to dump content -> {e} \n"
     
