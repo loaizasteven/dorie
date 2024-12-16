@@ -1,4 +1,4 @@
-from openai import OpenAI
+from openai import AsyncOpenAI as OpenAI
 from openai.types.chat.chat_completion import ChatCompletion, ChatCompletionMessage
 
 from pydantic import BaseModel
@@ -15,8 +15,11 @@ import json
 import logging
 import csv
 import io
+import asyncio
+import uuid
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class SyntheticDataGenerator(BaseModel):
@@ -58,17 +61,20 @@ class SyntheticDataGenerator(BaseModel):
     maxtokens: int = 16000
     completion: ChatCompletion | None = None
     response_format: Dict | Any = RESPONSE_FORMAT
+    sessionid: uuid.UUID | None = None
 
     def model_post_init(self, __context: Any) -> None:
         """Override this method to perform additional initialization after `__init__` and `model_construct`.
         This is useful if you want to do some validation that requires the entire model to be initialized.
         """
+        self.sessionid = uuid.uuid4()
         if not self.client:
             logging.debug('Message: initializing client connection')
             self.client = OpenAI()
     
-    def invoke(self) -> ChatCompletionMessage:
-        self.completion = self.client.beta.chat.completions.parse(
+    async def invoke(self) -> ChatCompletionMessage:
+        logger.info(f"Generating synthetic data; sessionId:{self.sessionid}")
+        self.completion = await self.client.beta.chat.completions.parse(
             model = self.modelname,
             max_tokens= self.maxtokens,
             response_format=self.response_format,
@@ -77,7 +83,7 @@ class SyntheticDataGenerator(BaseModel):
                 {"role": "user", "content": f"{self.userinput}"}
             ]
         )
-
+        logger.info(f"Completed; sessionId:{self.sessionid}")
         return self.completion.choices[0].message
 
     def parseobj(self, classobj:bool =False) -> Union[None, Dict]:
@@ -121,22 +127,21 @@ class SyntheticDataGenerator(BaseModel):
         except (AttributeError, BaseException) as e:
             return f"Error: Unable to dump content -> {e} \n"
         
-    def __del__(self):
-        self.client.close()
-
-    def close(self):
-        self.__del__()
-        logging.debug('Message: closing client connection \n')
+    async def close(self):
+        logger.info(f"Closing client connection Object_{self.sessionid}")
+        await self.client.close()
 
 
 if __name__ == "__main__":
-    # Generate Call
-    synthdata = SyntheticDataGenerator()
-    synthdata.invoke()
+    async def test_corutine_syntheticdata():
+        synthdata = SyntheticDataGenerator()
+        synthdata2 = SyntheticDataGenerator(systemprompt = "provide a small finetuning training example", userinput = "Provide 1 trianing examples",)
+        await asyncio.gather(synthdata.invoke(), synthdata2.invoke())
 
-    # Dump Content
-    status = synthdata.save(outputfile = './syntheticinsurancedata.csv')
-    print(status)
+        status = synthdata.save(outputfile = './syntheticinsurancedata.csv')
+        print(status)
 
-    # close client
-    synthdata.close()
+        await synthdata2.close()
+
+    # Generate concurrent openai calls 
+    asyncio.run(test_corutine_syntheticdata())
