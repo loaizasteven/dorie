@@ -35,21 +35,24 @@ class Intent(BaseModel):
     dataclass: Optional[MyDataset] = None
     trainer: Optional[Union[ModelTrainer, str]] = None
     inference_text: Optional[str] = None
+    hubmodel: str = 'stevenloaiza/dorie-intent-classifier'
 
     def model_post_init(self, *args, **kwargs) -> None:
         """Override this method to perform additional initialization after `__init__` and `model_construct`.
         This is useful if you want to do some validation that requires the entire model to be initialized.
         """
         if isinstance(self.trainer, str):
-            logger.info(f"Instance trainer is a string, loading model from path {self.trainer}")
-            self._load_local_model(self.trainer)
-
+            try:
+                logger.info(f"Instance trainer is a string, loading model from path {self.trainer}")
+                self._load_model(self.trainer)
+            except OSError:
+                self._load_model(self.hubmodel)
             logger.info("Testing inference on loaded model")
             _, predicted_label = self._inference_call(self.inference_text)
             logger.info(f"Input: {self.inference_text}: \n Predicted label: {predicted_label}")
 
-    def _load_local_model(self, model_path: str) -> None:
-        """Load a model from a local path."""
+    def _load_model(self, model_path: str) -> None:
+        """Load a model from a local path or HuggingFace Hub"""
         # TODO: Add to the ModelTrianer class instead?
         self.config['tokenizer'] = AutoTokenizer.from_pretrained(model_path)
         self.config['model'] = AutoModelForSequenceClassification.from_pretrained(model_path)
