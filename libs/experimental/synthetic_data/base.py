@@ -28,60 +28,29 @@ logger.setLevel(logging.INFO)
 
 
 class SyntheticDataGenerator(BaseModel):
-    """ Class to generate sample finetuning data from LLM to be used for task specific SLM
+    """ Class to generate sample finetuning data from LLM to be used for task-specific SLM """
 
-    Docstring Test
-    >>> from pydantic import BaseModel
-    >>> from typing import Dict, List
-    >>> class Message(BaseModel):
-    ...     role: str
-    ...     content: str
-    >>> class OpenAIResponse(BaseModel):
-    ...     messages: List[Message]
-    >>> class TrainingClass(BaseModel):
-    ...     data: List[OpenAIResponse]
-    >>> synthdata = SyntheticDataGenerator(
-    ...         systemprompt = "provide a small finetuning training example",
-    ...         userinput = "Provide 1 trianing examples",
-    ...         modelname = "gpt-4o-2024-08-06",
-    ...         response_format = TrainingClass
-    ...     )
-    >>> response = synthdata.invoke()
-    >>> isinstance(response.parsed, TrainingClass)
-    True
-
-    Attributes:
-        systemprompt: system message prompt
-        userinput: input query
-        modelname: model name, see OpenAi for available models
-        client: OpenAI client
-        maxtokens: The maximum number of tokens to generate includes both the prompt and completion, has a ceiling based
-                    on model choice.
-        completion: ChatCompletion type generate within the __call__() method
-    """
     systemprompt: str = SYNTHETIC_FEW_SHOT_PREFIX
-    userinput: str = USER_PROMPT
-    modelname: str = "gpt-4o-2024-08-06"
+    userinput: str = USER_PROMPT  # Explicit instruction to provide 100 examples
+    modelname: str = "gpt-4o"
     client: Any | None = None
-    maxtokens: int = 100000
+    maxtokens: int = 16000  # Ensure this is large enough for the entire response
     completion: ChatCompletion | None = None
     response_format: Dict | Any = RESPONSE_FORMAT
     sessionid: uuid.UUID | None = None
 
     def model_post_init(self, __context: Any) -> None:
-        """Override this method to perform additional initialization after `__init__` and `model_construct`.
-        This is useful if you want to do some validation that requires the entire model to be initialized.
-        """
+        """ Override to perform additional initialization after `__init__` and `model_construct`. """
         self.sessionid = uuid.uuid4()
         if not self.client:
             logging.debug('Message: initializing client connection')
             self.client = OpenAI()
-    
-    async def invoke(self) -> ChatCompletionMessage:
+
+    async def invoke(self) -> Dict:
         logger.info(f"Generating synthetic data; sessionId:{self.sessionid}")
-        self.completion = await self.client.beta.chat.completions.parse(
-            model = self.modelname,
-            max_tokens= self.maxtokens,
+        completion = await self.client.beta.chat.completions.parse(
+            model=self.modelname,
+            max_tokens=self.maxtokens,
             response_format=self.response_format,
             messages=[
                 {"role": "system", "content": f"{self.systemprompt}"},
@@ -89,14 +58,15 @@ class SyntheticDataGenerator(BaseModel):
             ]
         )
         logger.info(f"Completed; sessionId:{self.sessionid}")
-        return self.completion.choices[0].message
+        return self.parseobj(completion)
 
-    def parseobj(self, classobj:bool =False) -> Union[None, Dict]:
-        msg = self.completion.choices[0].message
+    def parseobj(self, parsed_response, classobj: bool = False) -> Union[None, Dict]:
+        """ Parse the response into usable data format. """
+        msg = parsed_response.choices[0].message
         return msg.parsed if classobj else json.loads(msg.content)
-    
-    def _json_to_csv(self, jsondata:Dict) -> str:
-        """Convert json data to csv format, using io.StringIO to write to memory"""
+
+    def _json_to_csv(self, jsondata: Dict) -> str:
+        """ Convert JSON data to CSV format. """
         csvfile = io.StringIO()
         csvwriter = csv.writer(csvfile)
 
@@ -104,18 +74,18 @@ class SyntheticDataGenerator(BaseModel):
         csvwriter.writerow(jsondata.keys())
         csvwriter.writerows(zip(*jsondata.values()))
 
-        csvfile.seek(0) # reset the file pointer
+        csvfile.seek(0)  # Reset the file pointer
         return csvfile.getvalue()
-    
-    def save(self, outputfile: str, format: str = 'csv') -> str:
-        """Save the synthetic data to a file"""
-        trainingdata = self.parseobj()
+
+    def save(self, trainingdata: dict, outputfile: str, format: str = 'csv') -> str:
+        """ Save the synthetic data to a file. """
         if format == 'json':
             return self.jsondump(trainingdata, outputfile)
         else:
             return self.csvdump(trainingdata, outputfile)
 
     def jsondump(self, object: dict, outputfile: str) -> str:
+        """ Save JSON data to file. """
         try:
             with open(outputfile, 'w') as f:
                 json.dump(object, f, indent=4)
@@ -124,6 +94,7 @@ class SyntheticDataGenerator(BaseModel):
             return f"Error: Unable to dump content -> {e} \n"
 
     def csvdump(self, object: dict, outputfile: str) -> str:
+        """ Save CSV data to file. """
         try:
             csv_content = self._json_to_csv(object)
             with open(outputfile, 'w') as f:
@@ -131,41 +102,32 @@ class SyntheticDataGenerator(BaseModel):
             logger.info(f"Success: Synthetic data completed and dumped to -> {outputfile}")
         except (AttributeError, BaseException) as e:
             logger.info(f"Error: Unable to dump content -> {e} \n")
-        
-    def s3upload(self, file: str, bucket: str, object_name: str = None) -> str:
-        if bucket:
-            s3 = S3Connection()
-            response = s3.upload_file(file, bucket, object_name)
-            if response.get("statusCode") == HTTPStatus.OK:
-                logger.info(f"Success: Synthetic data uploaded to s3 bucket -> {bucket}")
-            else:
-                logger.error(f"Error: Unable to upload to s3 bucket -> {bucket}")
-                logger.error(f"Error: {response.message}")
-    
-    def hfupload(self, path:str, data_file: str, model_name: str) -> str:
-        dataset = load_dataset(path=path, data_files=data_file)
-        dataset.push_to_hub(model_name)
-    
+
     async def close(self):
+        """ Close the client connection. """
         logger.info(f"Closing client connection Object_{self.sessionid}")
         await self.client.close()
 
 
-if __name__ == "__main__":
+def merge_dicts(dict_list):
+    merged_dict = {}
+    for d in dict_list:
+        for key, value in d.items():
+            if key not in merged_dict:
+                merged_dict[key] = []
+            merged_dict[key].extend(value)
+    return merged_dict
+
+
+async def corutine_syntheticdata(n: int = 5):
+    """ Coroutine to generate synthetic data """
     synthdata = SyntheticDataGenerator()
-    response = asyncio.run(synthdata.invoke())
-    synthdata.save(outputfile = './syntheticinsurancedata.csv')
-    # synthdata.s3upload(file='./syntheticinsurancedata.csv', bucket='myawsbuckettestingcase')
-    # synthdata.hfupload(path='csv', data_file='./syntheticinsurancedata.csv', model_name='synthetic_insurance_data')
-    # async def test_corutine_syntheticdata():
-    #     synthdata = SyntheticDataGenerator()
-    #     synthdata2 = SyntheticDataGenerator(systemprompt = "provide a small finetuning training example", userinput = "Provide 1 trianing examples",)
-    #     await asyncio.gather(synthdata.invoke(), synthdata2.invoke())
+    response = await asyncio.gather(*[synthdata.invoke() for _ in range(n)])
+    response_flatten = merge_dicts(response)
+    import pprint
+    pprint.pprint(len(response_flatten['label']))
 
-    #     status = synthdata.save(outputfile = './syntheticinsurancedata.csv')
-    #     print(status)
 
-    #     await synthdata2.close()
-
-    # # Generate concurrent openai calls 
-    # asyncio.run(test_corutine_syntheticdata())
+if __name__ == "__main__":
+    asyncio.run(corutine_syntheticdata())
+    
