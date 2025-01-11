@@ -8,7 +8,9 @@ from pathlib import Path
 import sys
 current_dir = Path(__file__).resolve()
 sys.path.insert(0, str(current_dir.parent))
+sys.path.insert(0, str(current_dir.parents[1]))
 
+from storage.s3_connection import S3Connection
 from prompts import SYNTHETIC_FEW_SHOT_PREFIX, USER_PROMPT, RESPONSE_FORMAT
 
 import json 
@@ -17,6 +19,7 @@ import csv
 import io
 import asyncio
 import uuid
+from http import HTTPStatus
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -118,30 +121,42 @@ class SyntheticDataGenerator(BaseModel):
         except (AttributeError, BaseException) as e:
             return f"Error: Unable to dump content -> {e} \n"
 
-    def csvdump(self, object: dict, outputfile: str) -> str:
+    def csvdump(self, object: dict, outputfile: str, bucket = "s3") -> str:
         try:
             csv_content = self._json_to_csv(object)
             with open(outputfile, 'w') as f:
                 f.write(csv_content)
-            return f"Success: Synthetic data completed and dumped to -> {outputfile}"
+            logger.info(f"Success: Synthetic data completed and dumped to -> {outputfile}")
         except (AttributeError, BaseException) as e:
-            return f"Error: Unable to dump content -> {e} \n"
+            logger.info(f"Error: Unable to dump content -> {e} \n")
+    
+        if bucket:
+            response = self.s3upload(file=outputfile, bucket=bucket)
+            if response.statusCode == HTTPStatus.OK:
+                logger.info(f"Success: Synthetic data uploaded to s3 bucket -> {bucket}")
+            else:
+                logger.error(f"Error: Unable to upload to s3 bucket -> {bucket}")
+                logger.error(f"Error: {response.message}")
         
+    def s3upload(self, file: str, bucket: str, object_name: str = None) -> str:
+        s3 = S3Connection()
+        return s3.upload_file(file, bucket, object_name)
+    
     async def close(self):
         logger.info(f"Closing client connection Object_{self.sessionid}")
         await self.client.close()
 
 
-if __name__ == "__main__":
-    async def test_corutine_syntheticdata():
-        synthdata = SyntheticDataGenerator()
-        synthdata2 = SyntheticDataGenerator(systemprompt = "provide a small finetuning training example", userinput = "Provide 1 trianing examples",)
-        await asyncio.gather(synthdata.invoke(), synthdata2.invoke())
+# if __name__ == "__main__":
+    # async def test_corutine_syntheticdata():
+    #     synthdata = SyntheticDataGenerator()
+    #     synthdata2 = SyntheticDataGenerator(systemprompt = "provide a small finetuning training example", userinput = "Provide 1 trianing examples",)
+    #     await asyncio.gather(synthdata.invoke(), synthdata2.invoke())
 
-        status = synthdata.save(outputfile = './syntheticinsurancedata.csv')
-        print(status)
+    #     status = synthdata.save(outputfile = './syntheticinsurancedata.csv')
+    #     print(status)
 
-        await synthdata2.close()
+    #     await synthdata2.close()
 
-    # Generate concurrent openai calls 
-    asyncio.run(test_corutine_syntheticdata())
+    # # Generate concurrent openai calls 
+    # asyncio.run(test_corutine_syntheticdata())
