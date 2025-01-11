@@ -25,7 +25,7 @@ class S3Connection(BaseModel):
 
         # Upload the file
         try:
-            print(f"Uploading {file_name} to {bucket}/{object_name}")
+            logging.info(f"Uploading {file_name} to {bucket}/{object_name}")
             response = self.client.upload_file(file_name, bucket, object_name)
         except ClientError as e:
             logging.error(e)
