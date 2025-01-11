@@ -13,6 +13,8 @@ sys.path.insert(0, str(current_dir.parents[1]))
 from storage.s3_connection import S3Connection
 from prompts import SYNTHETIC_FEW_SHOT_PREFIX, USER_PROMPT, RESPONSE_FORMAT
 
+from datasets import load_dataset
+
 import json 
 import logging
 import csv
@@ -61,7 +63,7 @@ class SyntheticDataGenerator(BaseModel):
     userinput: str = USER_PROMPT
     modelname: str = "gpt-4o-2024-08-06"
     client: Any | None = None
-    maxtokens: int = 16000
+    maxtokens: int = 100000
     completion: ChatCompletion | None = None
     response_format: Dict | Any = RESPONSE_FORMAT
     sessionid: uuid.UUID | None = None
@@ -121,7 +123,7 @@ class SyntheticDataGenerator(BaseModel):
         except (AttributeError, BaseException) as e:
             return f"Error: Unable to dump content -> {e} \n"
 
-    def csvdump(self, object: dict, outputfile: str, bucket = "s3") -> str:
+    def csvdump(self, object: dict, outputfile: str) -> str:
         try:
             csv_content = self._json_to_csv(object)
             with open(outputfile, 'w') as f:
@@ -129,25 +131,32 @@ class SyntheticDataGenerator(BaseModel):
             logger.info(f"Success: Synthetic data completed and dumped to -> {outputfile}")
         except (AttributeError, BaseException) as e:
             logger.info(f"Error: Unable to dump content -> {e} \n")
-    
+        
+    def s3upload(self, file: str, bucket: str, object_name: str = None) -> str:
         if bucket:
-            response = self.s3upload(file=outputfile, bucket=bucket)
-            if response.statusCode == HTTPStatus.OK:
+            s3 = S3Connection()
+            response = s3.upload_file(file, bucket, object_name)
+            if response.get("statusCode") == HTTPStatus.OK:
                 logger.info(f"Success: Synthetic data uploaded to s3 bucket -> {bucket}")
             else:
                 logger.error(f"Error: Unable to upload to s3 bucket -> {bucket}")
                 logger.error(f"Error: {response.message}")
-        
-    def s3upload(self, file: str, bucket: str, object_name: str = None) -> str:
-        s3 = S3Connection()
-        return s3.upload_file(file, bucket, object_name)
+    
+    def hfupload(self, path:str, data_file: str, model_name: str) -> str:
+        dataset = load_dataset(path=path, data_files=data_file)
+        dataset.push_to_hub(model_name)
     
     async def close(self):
         logger.info(f"Closing client connection Object_{self.sessionid}")
         await self.client.close()
 
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
+    synthdata = SyntheticDataGenerator()
+    response = asyncio.run(synthdata.invoke())
+    synthdata.save(outputfile = './syntheticinsurancedata.csv')
+    # synthdata.s3upload(file='./syntheticinsurancedata.csv', bucket='myawsbuckettestingcase')
+    # synthdata.hfupload(path='csv', data_file='./syntheticinsurancedata.csv', model_name='synthetic_insurance_data')
     # async def test_corutine_syntheticdata():
     #     synthdata = SyntheticDataGenerator()
     #     synthdata2 = SyntheticDataGenerator(systemprompt = "provide a small finetuning training example", userinput = "Provide 1 trianing examples",)
