@@ -7,7 +7,6 @@ import boto3
 from botocore.exceptions import ClientError
 from http import HTTPStatus
 
-# Configuration Details found here https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html
 
 class S3Connection(BaseModel):
     credentials: Optional[Dict[str, str]] = None
