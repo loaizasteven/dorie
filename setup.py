@@ -4,10 +4,7 @@ setup(
     name='dorie',
     version='0.1.0',
     packages=find_packages(),
-    install_requires=[
-        # Add your project's dependencies here
-        # e.g., 'numpy', 'pandas', 'requests'
-    ],
+    install_requires=open('requirements.txt').read().splitlines(),
     entry_points={
         'console_scripts': [
             # Add command line scripts here
