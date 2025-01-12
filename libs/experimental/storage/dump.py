@@ -11,7 +11,7 @@ from http import HTTPStatus
 logger = logging.getLogger(__name__)
 
 @staticmethod
-def s3upload(self, file: str, bucket: str, object_name: str = None) -> str:
+def s3upload(file: str, bucket: str, object_name: str = None) -> str:
     """ Upload the generated file to S3. """
     if bucket:
         s3 = S3Connection()
@@ -23,7 +23,7 @@ def s3upload(self, file: str, bucket: str, object_name: str = None) -> str:
             logger.error(f"Error: {response.message}")
 
 @staticmethod
-def hfupload(self, path: str, data_file: str, model_name: str) -> str:
+def hfupload(path: str, data_file: str, model_name: str) -> str:
     """ Upload the data file to Hugging Face. """
     dataset = load_dataset(path=path, data_files=data_file, split=['train', 'test'])
     dataset.push_to_hub(model_name)
