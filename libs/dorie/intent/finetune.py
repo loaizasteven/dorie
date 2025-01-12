@@ -83,10 +83,10 @@ class Intent(BaseModel):
 
 if __name__ == '__main__':
     intent_classifier = Intent(
-        datapath= osp.join(Commons().fileDir, 'samples/personal-auto-insurance-intents.csv'),
-        trainer=osp.join(Commons().fileDir, 'best_results_save'),
+        datapath= "stevenloaiza/synthetic_insurance_data",
+        # trainer=osp.join(Commons().fileDir, 'best_results_save'),
         inference_text="I was in a car accident and need to file a claim but I don't know how to start the process."
         )
-    # intent_classifier.train()
-    # intent_classifier.save('./results')
-    # intent_classifier.push_to_hub(model_name='stevenloaiza/dorie-intent-classifier')
+    intent_classifier.train()
+    intent_classifier.save('./results')
+    intent_classifier.push_to_hub(model_name='stevenloaiza/dorie-intent-classifier')

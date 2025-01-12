@@ -1,8 +1,8 @@
 # Preprcess the dataset and tokenize the input sentence
-from datasets import Dataset, DatasetDict
+from datasets import Dataset, DatasetDict, load_dataset
 from datasets.formatting.formatting import LazyBatch
 from transformers import AutoTokenizer
-
+import datasets.exceptions as dataset_exceptions
 from pydantic import BaseModel
 
 import pandas as pd
@@ -30,16 +30,16 @@ class MyDataset(BaseModel):
     
     def _setlabelmap(self, dataset: Dataset) -> None:
         """Set the label map"""
-        self.labelMap = self.labelMap or {label: i for i, label in enumerate(dataset['label'].unique())} 
+        self.labelMap = self.labelMap or {str(label): i for i, label in enumerate(dataset['label'].unique())}
 
     def _csvconverter(self, path: str):
         """Convert CSV dataset to DatasetDict"""
         dataset = pd.read_csv(path)
         self._setnumlabels(dataset)
-        
-        # TODO: Add support for dumping label map to a file/instance
         self._setlabelmap(dataset=dataset)
-        dataset['label'] = dataset['label'].map(self.labelMap)
+
+        # TODO: Add support for dumping label map to a file/instance
+        # dataset['label'] = dataset['label'].map(self.labelMap)
 
         data_dict = {'text': dataset['text'].tolist(), 'label': dataset['label'].tolist()}
         split_idx = int(self.split * len(data_dict['text']))
@@ -53,14 +53,27 @@ class MyDataset(BaseModel):
         """Convert JSONL dataset to DatasetDict"""
         pass
 
+    def _hfhub(self):
+        """Load the dataset from HuggingFace Hub"""
+        train, test = load_dataset(self.path, split=['train', 'test'])
+        self._setnumlabels(train.data)
+        self._setlabelmap(dataset=train.data)
+
+        return DatasetDict({
+            "train": train,
+            "test": test
+        })
+
     def loader(self, format:str = 'torch'):
         """Load the dataset"""
-        mapping = {'csv': self._csvconverter, 'jsonl': self._jsonlconverter}
-        converter = mapping.get(self._fileformat())
-        assert converter, f"File format {self._fileformat()} not supported"
+        try: 
+            dataset = self._hfhub()
+        except (dataset_exceptions.DatasetNotFoundError, FileNotFoundError):
+            mapping = {'csv': self._csvconverter, 'jsonl': self._jsonlconverter}
+            converter = mapping.get(self._fileformat(), self._hfhub)
+            assert converter, f"File format {self._fileformat()} not supported"
 
-        dataset = converter(self.path)
-
+            dataset = converter(self.path)
         dataset = dataset.map(self.preprocess, batched=True)
         try:
             dataset.set_format(format)
@@ -75,7 +88,7 @@ class MyDataset(BaseModel):
         tokenizer = self.tokenizer()
 
         tokenized_examples = tokenizer(examples['text'], truncation=True, padding='max_length', max_length=max_length)
-        tokenized_examples['label'] = examples['label']
+        tokenized_examples['label'] = [self.labelMap[label] for label in examples['label']]
         return tokenized_examples
 
     def tokenizer(self):
