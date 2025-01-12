@@ -17,3 +17,9 @@ This README file provides an overview of the directory structure and key files w
     - [base.py](synthetic_data/base.py): Base module for synthetic data generation.
     - [prompts.py](synthetic_data/prompts.py): Module for generating synthetic data prompts.
 
+## Known Bug
+The prompt is a simple example for an insurance based intent training set; The use of `gpt-4o` fails to properly include examples for `addDriver` intent. Two options:
+* Update the prompt with **Few Shot learning** examples
+* Use of **COT**
+* Include a meta-prompt to include higher-level instructions defining the structure of the reponse
+* Change model to the `OpenAI-o*` family of reasoning models.

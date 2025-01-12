@@ -28,6 +28,7 @@ The project is organized as follows:
     - User-friendly configuration and setup process.
     - Comprehensive documentation and tutorials.
     - Additional cookbook examples and pytest
+    - Updates to huggingface modelcard
 
 ## Getting Started
 
