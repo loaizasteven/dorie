@@ -84,7 +84,7 @@ class Intent(BaseModel):
 if __name__ == '__main__':
     intent_classifier = Intent(
         datapath= "stevenloaiza/synthetic_insurance_data",
-        trainer=osp.join(Commons().fileDir, 'best_results_save'),
+        # trainer=osp.join(Commons().fileDir, 'best_results_save'),
         inference_text="I was in a car accident and need to file a claim but I don't know how to start the process."
         )
     intent_classifier.train()
