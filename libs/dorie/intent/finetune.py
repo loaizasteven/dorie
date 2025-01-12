@@ -87,7 +87,6 @@ if __name__ == '__main__':
         trainer=osp.join(Commons().fileDir, 'best_results_save'),
         inference_text="I was in a car accident and need to file a claim but I don't know how to start the process."
         )
-    intent_classifier.load_data()
     intent_classifier.train()
     intent_classifier.save('./results')
     intent_classifier.push_to_hub(model_name='stevenloaiza/dorie-intent-classifier')
