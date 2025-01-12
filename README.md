@@ -1,9 +1,32 @@
 # <img src="./docs/static/img/Image.jpeg" alt="drawing" width="30"/> DORIE
 > Dynamic Omnichannel RoBERTa Intent Engine
+*Warning: This is an unstable version of the project. Use with caution as there may be breaking changes until the first stable release (1.0.0).*
 
 ## Overview
 DORIE (Dynamic Omnichannel RoBERTa Intent Engine) is an advanced natural language processing system designed for multi-channel intent classification. Built on RoBERTa architecture, it provides enterprise-grade NLP capabilities for automated response handling.
 
+## Project Structure
+The project is organized as follows:
+- `docs/`: Contains documentation files and static assets.
+- `libs/`: Includes library scripts and utilities.
+    - `dorie/`: Core library for DORIE functionalities.
+        - `virtualenv.sh`: Script to set up a virtual environment.
+        - `hf_management.sh`: Script for managing Huggingface cache.
+- `scripts/`: Contains various scripts for data processing and model training.
+- `tests/`: Unit and integration tests for the project.
+- `requirements.txt`: List of dependencies for setting up the project using virtualenv.
+
+## Roadmap
+- **Version 1.0.0**: First stable release with core functionalities.
+- **Future Enhancements**:
+    - Enhanced model training pipelines.
+    - Integration with more databases and data structures.
+    - Include LoRA (Low-Rank Adaptation) for efficient fine-tuning.
+    - Improved multi-language support.
+    - Advanced error handling and logging mechanisms.
+    - User-friendly configuration and setup process.
+    - Comprehensive documentation and tutorials.
+    - Additional cookbook examples and pytest
 
 ## Getting Started
 
@@ -45,3 +68,6 @@ Due to torch compatibility issues with Poetry, you can alternatively:
 
 ### Cache Management
 For Huggingface cache management, refer to [hf_management.sh](./libs/dorie/hf_management.sh).
+
+## Contributing
+We welcome contributions from the community. Please refer to the `CONTRIBUTING.md` (TBD) file for guidelines on how to contribute to the project.
