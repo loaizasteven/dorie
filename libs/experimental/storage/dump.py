@@ -24,7 +24,7 @@ def s3upload(file: str, bucket: str, object_name: str = None) -> str:
             logger.error(f"Error: {response.message}")
 
 @staticmethod
-def hfupload(path: str, data_file: Union[str, Dict], model_name: str) -> str:
+def hfupload(path: str, data_files: Union[str, Dict], model_name: str) -> str:
     """ Upload the data file to Hugging Face. """
-    dataset = load_dataset(path=path, data_files=data_file)
+    dataset = load_dataset(path=path, data_files=data_files)
     dataset.push_to_hub(model_name)
