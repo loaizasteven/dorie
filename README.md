@@ -1,5 +1,6 @@
 # <img src="./docs/static/img/Image.jpeg" alt="drawing" width="30"/> DORIE
 > Dynamic Omnichannel RoBERTa Intent Engine
+
 *Warning: This is an unstable version of the project. Use with caution as there may be breaking changes until the first stable release (1.0.0).*
 
 ## Overview
