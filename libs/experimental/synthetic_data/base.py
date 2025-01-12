@@ -3,6 +3,7 @@ from openai.types.chat.chat_completion import ChatCompletion, ChatCompletionMess
 
 from pydantic import BaseModel
 from typing import Dict, Any, Union
+import os
 
 from pathlib import Path
 import sys
@@ -10,7 +11,7 @@ current_dir = Path(__file__).resolve()
 sys.path.insert(0, str(current_dir.parent))
 sys.path.insert(0, str(current_dir.parents[1]))
 
-from storage.s3_connection import S3Connection
+from storage.dump import hfupload, s3upload
 from prompts import SYNTHETIC_FEW_SHOT_PREFIX, USER_PROMPT, RESPONSE_FORMAT
 
 from datasets import load_dataset
@@ -119,15 +120,28 @@ def merge_dicts(dict_list):
     return merged_dict
 
 
-async def corutine_syntheticdata(n: int = 5):
+async def corutine_syntheticdata(n: int = 5, outputfile: str = 'syntheticdata'):
     """ Coroutine to generate synthetic data """
-    synthdata = SyntheticDataGenerator()
-    response = await asyncio.gather(*[synthdata.invoke() for _ in range(n)])
-    response_flatten = merge_dicts(response)
-    import pprint
-    pprint.pprint(len(response_flatten['label']))
+    synthdata_instances = [SyntheticDataGenerator() for _ in range(n)]
+    response = await asyncio.gather(*[synthdata.invoke() for synthdata in synthdata_instances])
+    train_flatten = merge_dicts(response[:-2])
+    test_flatten = merge_dicts(response[-2:])
+
+    logger.info(f"Corutine returned {len(train_flatten['label'])} examples")
+    print(train_flatten)
+    # Save the synthetic data to a file
+    synthdata_instances[0].csvdump(train_flatten, f"{outputfile}_train.csv")
+    synthdata_instances[0].csvdump(test_flatten, f"{outputfile}_test.csv")
+
+
+    hfupload(
+        path='csv', 
+        data_files={
+            "train": f"{outputfile}_train.csv", 
+            "test": f"{outputfile}_test.csv"
+        }, 
+        model_name='stevenloaiza/synthetic_insurance_data')
 
 
 if __name__ == "__main__":
     asyncio.run(corutine_syntheticdata())
-    
