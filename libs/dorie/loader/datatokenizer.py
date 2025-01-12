@@ -2,7 +2,7 @@
 from datasets import Dataset, DatasetDict, load_dataset
 from datasets.formatting.formatting import LazyBatch
 from transformers import AutoTokenizer
-
+import datasets.exceptions as dataset_exceptions
 from pydantic import BaseModel
 
 import pandas as pd
@@ -55,13 +55,16 @@ class MyDataset(BaseModel):
 
     def _hfhub(self):
         """Load the dataset from HuggingFace Hub"""
-        return load_dataset(self.path, split=['train', 'test'])
+        return DatasetDict({
+            "train": load_dataset(self.path, split=['train'])[0],
+            "test": load_dataset(self.path, split=['test'])[0]
+        })
 
     def loader(self, format:str = 'torch'):
         """Load the dataset"""
         try: 
-            dataset = self._hfhub(self.path)
-        except dataset.exceptions.DatasetNotFoundError:
+            dataset = self._hfhub()
+        except dataset_exceptions.DatasetNotFoundError:
             mapping = {'csv': self._csvconverter, 'jsonl': self._jsonlconverter}
             converter = mapping.get(self._fileformat(), self._hfhub)
             assert converter, f"File format {self._fileformat()} not supported"
