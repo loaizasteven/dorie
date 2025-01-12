@@ -7,6 +7,7 @@ from s3_connection import S3Connection
 from datasets import load_dataset
 import logging
 from http import HTTPStatus
+from typing import Dict, Union
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ def s3upload(file: str, bucket: str, object_name: str = None) -> str:
             logger.error(f"Error: {response.message}")
 
 @staticmethod
-def hfupload(path: str, data_file: str, model_name: str) -> str:
+def hfupload(path: str, data_file: Union[str, Dict], model_name: str) -> str:
     """ Upload the data file to Hugging Face. """
-    dataset = load_dataset(path=path, data_files=data_file, split=['train', 'test'])
+    dataset = load_dataset(path=path, data_files=data_file)
     dataset.push_to_hub(model_name)
