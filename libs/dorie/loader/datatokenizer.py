@@ -1,5 +1,5 @@
 # Preprcess the dataset and tokenize the input sentence
-from datasets import Dataset, DatasetDict
+from datasets import Dataset, DatasetDict, load_dataset
 from datasets.formatting.formatting import LazyBatch
 from transformers import AutoTokenizer
 
@@ -53,14 +53,20 @@ class MyDataset(BaseModel):
         """Convert JSONL dataset to DatasetDict"""
         pass
 
+    def _hfhub(self):
+        """Load the dataset from HuggingFace Hub"""
+        return load_dataset(self.path, split=['train', 'test'])
+
     def loader(self, format:str = 'torch'):
         """Load the dataset"""
-        mapping = {'csv': self._csvconverter, 'jsonl': self._jsonlconverter}
-        converter = mapping.get(self._fileformat())
-        assert converter, f"File format {self._fileformat()} not supported"
+        try: 
+            dataset = self._hfhub(self.path)
+        except dataset.exceptions.DatasetNotFoundError:
+            mapping = {'csv': self._csvconverter, 'jsonl': self._jsonlconverter}
+            converter = mapping.get(self._fileformat(), self._hfhub)
+            assert converter, f"File format {self._fileformat()} not supported"
 
-        dataset = converter(self.path)
-
+            dataset = converter(self.path)
         dataset = dataset.map(self.preprocess, batched=True)
         try:
             dataset.set_format(format)
