@@ -25,6 +25,4 @@ def test_transformer():
             )
     model = trainer.model
     assert isinstance(model, BertForSequenceClassification)
-
-    
     
