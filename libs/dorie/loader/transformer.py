@@ -1,12 +1,13 @@
 # Loader of hugging face transformer from /config.json
-from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trainer, TrainingArguments
+from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trainer, TrainingArguments, DataCollatorWithPadding
+import peft 
 
 import sys
 import os
 
 from typing import Any, Optional, Union
 from pydantic import BaseModel
-from .datatokenizer import MyDataset
+from .datatokenizer import MyDataset, tokenizer
 from datasets import DatasetDict
 
 import numpy as np
@@ -27,8 +28,9 @@ class ModelTrainer(BaseModel):
     modelArgs: dict
     device: str
     dataClass: MyDataset
-    data: Optional[DatasetDict] = None
-    model: Optional[AutoModelForSequenceClassification] = None
+    # TODO: Issue with validation of Optional[MyDataset] when an instantiated MyDataset is passed
+    data: Optional[Any] = None
+    model: Optional[Union[AutoModelForSequenceClassification,peft.peft_model.PeftModelForSequenceClassification]] = None
     tokenizer: Optional[AutoTokenizer] = None
     model_config: Optional[dict] = {'arbitrary_types_allowed': 'true'}
 
@@ -40,7 +42,7 @@ class ModelTrainer(BaseModel):
         self.dataClass = dataClass
         self.data = data if data else self.dataClass.loader()
         self.model = self.model or AutoModelForSequenceClassification.from_pretrained(self.baseModel, num_labels=self.dataClass.numLabels)
-        self.tokenizer = self.tokenizer or AutoTokenizer.from_pretrained(self.baseModel)
+        self.tokenizer = self.tokenizer or tokenizer(self.baseModel)
 
         # Model configuration
         self._setdevice()
@@ -54,7 +56,10 @@ class ModelTrainer(BaseModel):
             args=training_args,
             train_dataset=self.data['train'],
             eval_dataset=self.data['test'],
-            compute_metrics=lambda pred: {'accuracy': (pred.predictions.argmax(-1) == pred.label_ids).mean()}
+            compute_metrics=lambda pred: {'accuracy': (pred.predictions.argmax(-1) == pred.label_ids).mean()},
+            # data collator is used for padding the data to the maximum length of the batch 
+            # recommended for performance and memory optimization 
+            data_collator=DataCollatorWithPadding(tokenizer=self.tokenizer, return_tensors='pt')
         )
 
         trainer.train()
