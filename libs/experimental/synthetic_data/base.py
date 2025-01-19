@@ -150,7 +150,7 @@ def dict_split(dict_, split=0.8):
     return train, test
 
 
-async def corutine_syntheticdata(n: int = 1, outputfile: str = 'syntheticdata'):
+async def coroutine_syntheticdata(n: int = 1, outputfile: str = 'syntheticdata'):
     """ Coroutine to generate synthetic data 
     Limitation:
      You may encounter `openai.RateLimitError` if too many concurrent requests are made.
@@ -185,4 +185,4 @@ async def corutine_syntheticdata(n: int = 1, outputfile: str = 'syntheticdata'):
 
 
 if __name__ == "__main__":
-    asyncio.run(corutine_syntheticdata())
+    asyncio.run(coroutine_syntheticdata())
