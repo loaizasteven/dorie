@@ -7,11 +7,29 @@ from pydantic import BaseModel
 
 import pandas as pd
 
+import logging
+
 import os
 import sys
 from typing import Optional, Union
 from pathlib import Path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))  
+
+logger = logging.getLogger(__name__)
+
+def tokenizer(pretrained_model_name):
+    """Load the tokenizer"""
+    if any(k in pretrained_model_name for k in ("gpt", "opt", "bloom")):
+        padding_side = "left"
+    else:
+        padding_side = "right"
+
+    tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name, padding_side=padding_side)
+    if getattr(tokenizer, "pad_token_id") is None:
+        tokenizer.pad_token_id = tokenizer.eos_token_id
+        
+    return tokenizer
+
 
 class MyDataset(BaseModel):
     path: Union[str, Path]
@@ -68,7 +86,8 @@ class MyDataset(BaseModel):
         """Load the dataset"""
         try: 
             dataset = self._hfhub()
-        except (dataset_exceptions.DatasetNotFoundError, FileNotFoundError):
+        except (dataset_exceptions.DatasetNotFoundError, FileNotFoundError, TypeError) as e:
+            logger.debug(f"Encountered a {e}. Dataset not found in HuggingFace Hub. Loading from local path")
             mapping = {'csv': self._csvconverter, 'jsonl': self._jsonlconverter}
             converter = mapping.get(self._fileformat(), self._hfhub)
             assert converter, f"File format {self._fileformat()} not supported"
@@ -85,16 +104,11 @@ class MyDataset(BaseModel):
     
     def preprocess(self, examples: LazyBatch,  max_length: int = 128):
         """Preprocess the input sentence"""
-        tokenizer = self.tokenizer()
+        tokenizer_ = tokenizer(self.pretrained_model_name)
 
-        tokenized_examples = tokenizer(examples['text'], truncation=True, padding='max_length', max_length=max_length)
+        tokenized_examples = tokenizer_(examples['text'], truncation=True, padding='max_length', max_length=max_length)
         tokenized_examples['label'] = [self.labelMap[label] for label in examples['label']]
         return tokenized_examples
-
-    def tokenizer(self):
-        """Load the tokenizer"""
-        tokenizer = AutoTokenizer.from_pretrained(self.pretrained_model_name)
-        return tokenizer
 
     def __call__(self, *args, **kwds):
         return self.loader(*args, **kwds)
