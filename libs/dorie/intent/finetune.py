@@ -3,11 +3,11 @@ This module provides functionality for fine-tuning an intent classification mode
 """
 from intent import Commons, config
 
-from loader import MyDataset, ModelTrainer
+from loader import MyDataset, ModelTrainer, tokenizer
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import torch
 
-from typing import Optional, Union
+from typing import Optional, Union, Any
 from pydantic import BaseModel
 
 import os.path as osp
@@ -52,15 +52,16 @@ class Intent(BaseModel):
         """Load a model from a local path."""
         # TODO: Add to the ModelTrianer class instead?
         self.config['tokenizer'] = AutoTokenizer.from_pretrained(model_path)
-        self.config['model'] = AutoModelForSequenceClassification.from_pretrained(model_path)
+        self.config['model'] = tokenizer(model_path)
         
     def load_data(self):
         self.dataclass = MyDataset(path=self.datapath)
         return self.dataclass.loader()
 
     def train(self):
-        data = self.load_data()
-        self.trainer = ModelTrainer(**config(), dataClass=self.dataclass, data=data)
+        data = None if not self.dataclass else self.load_data()
+
+        self.trainer = ModelTrainer(**config(), dataClass=self.dataclass, data=data or self.dataclass.loader())
         self.trainer.train()
 
     def save(self, output_dir):
