@@ -1,9 +1,8 @@
 from openai import AsyncOpenAI as OpenAI
-from openai.types.chat.chat_completion import ChatCompletion, ChatCompletionMessage
+from openai.types.chat.chat_completion import ChatCompletion
 
 from pydantic import BaseModel
 from typing import Dict, Any, Union
-import os
 
 import random
 
@@ -13,10 +12,9 @@ current_dir = Path(__file__).resolve()
 sys.path.insert(0, str(current_dir.parent))
 sys.path.insert(0, str(current_dir.parents[1]))
 
-from storage.dump import hfupload, s3upload
+from storage.dump import hfupload
 from prompts import SYNTHETIC_FEW_SHOT_PREFIX, USER_PROMPT, RESPONSE_FORMAT
 
-from datasets import load_dataset
 
 import json 
 import logging
