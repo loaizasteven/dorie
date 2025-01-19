@@ -5,6 +5,8 @@ from pydantic import BaseModel
 from typing import Dict, Any, Union
 import os
 
+import random
+
 from pathlib import Path
 import sys
 current_dir = Path(__file__).resolve()
@@ -109,7 +111,6 @@ class SyntheticDataGenerator(BaseModel):
         logger.info(f"Closing client connection Object_{self.sessionid}")
         await self.client.close()
 
-
 def merge_dicts(dict_list):
     merged_dict = {}
     for d in dict_list:
@@ -119,28 +120,68 @@ def merge_dicts(dict_list):
             merged_dict[key].extend(value)
     return merged_dict
 
+def dict_split(dict_, split=0.8):
+    train = {'label': [], 'text': []}
+    test = {'label': [], 'text': []}
+    
+    # Combine 'label' and 'text' into a list of tuples for shuffling
+    combined = list(zip(dict_['label'], dict_['text']))
+    
+    # Shuffle the combined list
+    random.shuffle(combined)
+    
+    # Calculate the split index
+    split_index = int(len(combined) * split)
+    
+    # Split the data into train and test
+    train_combined = combined[:split_index]
+    test_combined = combined[split_index:]
+    
+    # Unzip the combined lists back into 'label' and 'text'
+    train['label'], train['text'] = zip(*train_combined)
+    test['label'], test['text'] = zip(*test_combined)
+    
+    # Convert the tuples back to lists
+    train['label'] = list(train['label'])
+    train['text'] = list(train['text'])
+    test['label'] = list(test['label'])
+    test['text'] = list(test['text'])
+    
+    return train, test
 
-async def corutine_syntheticdata(n: int = 5, outputfile: str = 'syntheticdata'):
-    """ Coroutine to generate synthetic data """
+
+async def corutine_syntheticdata(n: int = 1, outputfile: str = 'syntheticdata'):
+    """ Coroutine to generate synthetic data 
+    Limitation:
+     You may encounter `openai.RateLimitError` if too many concurrent requests are made.
+    """
     synthdata_instances = [SyntheticDataGenerator() for _ in range(n)]
     response = await asyncio.gather(*[synthdata.invoke() for synthdata in synthdata_instances])
-    train_flatten = merge_dicts(response[:-2])
-    test_flatten = merge_dicts(response[-2:])
+    if n == 1:
+        len(response[0]['label'])
+        train_flatten, test_flatten = dict_split(response[0])
+    else:
+        split = int(n * 0.8)
+        train_flatten = merge_dicts(response[:-split])
+        test_flatten = merge_dicts(response[-split:])
 
-    logger.info(f"Corutine returned {len(train_flatten['label'])} examples")
-    print(train_flatten)
+    logger.info(f"""
+                Corutine returned:
+                    Trianing Examples: {len(train_flatten['label'])}
+                    Testing Examples: {len(test_flatten['label'])}""
+                """)
     # Save the synthetic data to a file
     synthdata_instances[0].csvdump(train_flatten, f"{outputfile}_train.csv")
     synthdata_instances[0].csvdump(test_flatten, f"{outputfile}_test.csv")
 
 
-    hfupload(
-        path='csv', 
-        data_files={
-            "train": f"{outputfile}_train.csv", 
-            "test": f"{outputfile}_test.csv"
-        }, 
-        model_name='stevenloaiza/synthetic_insurance_data')
+    # hfupload(
+    #     path='csv', 
+    #     data_files={
+    #         "train": f"{outputfile}_train.csv", 
+    #         "test": f"{outputfile}_test.csv"
+    #     }, 
+    #     model_name='stevenloaiza/synthetic_insurance_data')
 
 
 if __name__ == "__main__":
