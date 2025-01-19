@@ -175,13 +175,13 @@ async def coroutine_syntheticdata(n: int = 1, outputfile: str = 'syntheticdata')
     synthdata_instances[0].csvdump(test_flatten, f"{outputfile}_test.csv")
 
 
-    # hfupload(
-    #     path='csv', 
-    #     data_files={
-    #         "train": f"{outputfile}_train.csv", 
-    #         "test": f"{outputfile}_test.csv"
-    #     }, 
-    #     model_name='stevenloaiza/synthetic_insurance_data')
+    hfupload(
+        path='csv', 
+        data_files={
+            "train": f"{outputfile}_train.csv", 
+            "test": f"{outputfile}_test.csv"
+        }, 
+        model_name='stevenloaiza/synthetic_insurance_data')
 
 
 if __name__ == "__main__":
