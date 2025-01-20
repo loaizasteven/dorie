@@ -11,6 +11,9 @@ DORIE (Dynamic Omnichannel RoBERTa Intent Engine) is an advanced natural languag
 - Include functionality for Mask Learning Modeling (MLM) for Domain adaptation
 - Evaluation Framework
 - Additional, PEFT functionality (i.e DORA)
+- Infernce API with FASTAPI
+    - Handle business usecase for confused intend
+- Out of scope intent re-training 
 
 ## Project Structure
 The project is organized as follows:
