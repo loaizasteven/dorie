@@ -14,6 +14,8 @@ DORIE (Dynamic Omnichannel RoBERTa Intent Engine) is an advanced natural languag
 - Infernce API with FASTAPI
     - Handle business usecase for confused intend
 - Out of scope intent re-training 
+- Manually fix some intents in train/test
+- Consider using an agent workflow or a secondary pass for a evaultor "agent" to rank/fix the synthetic intents
 
 ## Project Structure
 The project is organized as follows:
