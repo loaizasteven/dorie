@@ -62,7 +62,7 @@ class Intent(BaseModel):
     def train(self):
         data = None if not self.dataclass else self.load_data()
 
-        self.trainer = ModelTrainer(**config(), dataClass=self.dataclass, data=data or self.dataclass.loader())
+        self.trainer = ModelTrainer(**self.config, dataClass=self.dataclass, data=data or self.dataclass.loader())
         self.trainer.train()
 
     def save(self, output_dir):
