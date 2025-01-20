@@ -27,6 +27,8 @@ def return_peft_model(
     model = get_peft_model(model, peft_config)
     if verbose:
         logger.info(model.print_trainable_parameters())
+    
+    return model
 
 
 if __name__ == "__main__":
