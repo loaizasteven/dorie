@@ -32,7 +32,8 @@ logger = get_logger('__name__')
 class Intent(BaseModel):
     datapath: str 
     config: dict = config()
-    dataclass: Optional[MyDataset] = None
+    # Unable to place MyDataset here due to model valudation issues with Pydantic
+    dataclass: Optional[Any] = None
     trainer: Optional[Union[ModelTrainer, str]] = None
     inference_text: Optional[str] = None
 
