@@ -18,12 +18,13 @@ def return_peft_model(
             "lora_alpha": 32, 
             "lora_dropout": 0.1
         }, 
+        num_labels:int=2,
         verbose:bool=False
     ):
     """Return the PEFT model"""
     peft_config = LoraConfig(**lora_config)
 
-    model = AutoModelForSequenceClassification.from_pretrained(model_name_or_path)
+    model = AutoModelForSequenceClassification.from_pretrained(model_name_or_path, num_labels=num_labels)
     model = get_peft_model(model, peft_config)
     if verbose:
         logger.info(model.print_trainable_parameters())
