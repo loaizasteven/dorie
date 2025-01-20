@@ -4,10 +4,13 @@ import peft
 
 import sys
 import os
+import logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 from typing import Any, Optional, Union
 from pydantic import BaseModel
-from .datatokenizer import MyDataset, tokenizer
+from .datatokenizer import MyDataset, tokenizer as datatokenizer
 from datasets import DatasetDict
 
 import numpy as np
@@ -34,15 +37,28 @@ class ModelTrainer(BaseModel):
     tokenizer: Optional[AutoTokenizer] = None
     model_config: Optional[dict] = {'arbitrary_types_allowed': 'true'}
 
-    def __init__(self, baseModel: str, modelArgs: dict, device: str, dataClass: MyDataset, data: DatasetDict = None):
-        super().__init__(baseModel=baseModel, modelArgs=modelArgs, device=device, dataClass=dataClass, data=data)
+    def __init__(
+        self, 
+        baseModel: str, 
+        modelArgs: dict, 
+        device: str, 
+        dataClass: MyDataset, 
+        data: DatasetDict = None, 
+        model: Optional[Union[AutoModelForSequenceClassification,peft.peft_model.PeftModelForSequenceClassification]] = None, 
+        tokenizer: Optional[AutoTokenizer] = None
+    ):
+        super().__init__(baseModel=baseModel, modelArgs=modelArgs, device=device, dataClass=dataClass, data=data, model=model, tokenizer=tokenizer)
         self.baseModel = baseModel
         self.modelArgs = modelArgs
         self.device = device
         self.dataClass = dataClass
         self.data = data if data else self.dataClass.loader()
-        self.model = self.model or AutoModelForSequenceClassification.from_pretrained(self.baseModel, num_labels=self.dataClass.numLabels)
-        self.tokenizer = self.tokenizer or tokenizer(self.baseModel)
+
+        if isinstance(model, peft.peft_model.PeftModelForSequenceClassification):
+            logger.info("Using PEFT model")
+            logger.info(f"Model: {model}")
+        self.model = model or AutoModelForSequenceClassification.from_pretrained(self.baseModel, num_labels=self.dataClass.numLabels)
+        self.tokenizer = tokenizer or datatokenizer(self.baseModel)
 
         # Model configuration
         self._setdevice()
