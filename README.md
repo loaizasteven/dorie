@@ -84,3 +84,13 @@ For Huggingface cache management, refer to [hf_management.sh](./libs/dorie/hf_ma
 
 ## Contributing
 We welcome contributions from the community. Please refer to the `CONTRIBUTING.md` (TBD) file for guidelines on how to contribute to the project.
+## Citation
+```
+@misc{dorie2024,
+    title = {DORIE: Dynamic Omnichannel RoBERTa Intent Engine},
+    author = {Steven Loaiza},
+    year = {2024},
+    url = {https://github.com/loaizasteven/dorie},
+    description = {An advanced natural language processing system for multi-channel intent classification based on RoBERTa}
+}
+```
