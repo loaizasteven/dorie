@@ -6,6 +6,17 @@
 ## Overview
 DORIE (Dynamic Omnichannel RoBERTa Intent Engine) is an advanced natural language processing system designed for multi-channel intent classification. Built on RoBERTa architecture, it provides enterprise-grade NLP capabilities for automated response handling.
 
+## Todo list
+- Add metadata to the PEFT adaptation config loaded to Huggingface.
+- Include functionality for Mask Learning Modeling (MLM) for Domain adaptation
+- Evaluation Framework
+- Additional, PEFT functionality (i.e DORA)
+- Infernce API with FASTAPI
+    - Handle business usecase for confused intend
+- Out of scope intent re-training 
+- Manually fix some intents in train/test
+- Consider using an agent workflow or a secondary pass for a evaultor "agent" to rank/fix the synthetic intents
+
 ## Project Structure
 The project is organized as follows:
 - `docs/`: Contains documentation files and static assets.

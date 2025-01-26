@@ -2,7 +2,8 @@ from dorie import loader
 
 EXPECTED_ALL = [
     "MyDataset",
-    "ModelTrainer"
+    "ModelTrainer",
+    "tokenizer"
 ]
 
 def test_imports() -> None:
