@@ -20,6 +20,18 @@ logging.format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 class LUFramework(BaseModel):
     config: Any = None
 
+    def model_post_init(self, *args, **kwargs) -> None:
+        """CLI Information for user"""
+        if __name__ == "__main__":
+            logger.info(
+                "\033[92m" + """
+                Welcome to the Language Understanding Framework! This is a simple framework utilized to fine-tune a downstream tasks
+                from a pre-trained based model. The framework is built on top of HuggingFace's Transformers library and PyTorch. In the 
+                future, we will add support for continual pre-trianing (using DAPT and TAPT) as well as an evaluation framework starting 
+                with CLS tasks.  
+            """ + "\033[0m" 
+            )
+
     def _load_dataset(self, format: str = "torch") -> DatasetDict:
         """Load the dataset using MyDataset class"""
         if self.config.datapath.endswith(".csv"):
@@ -96,7 +108,6 @@ class LUFrameworkArgs(BaseModel):
 
 
 if __name__ == "__main__":
-    logger.info("Running main")
     config = LUFrameworkArgs()
     if config.verbose:
         logging.basicConfig(level=logging.DEBUG)
